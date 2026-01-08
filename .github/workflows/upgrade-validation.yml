@@ -51,7 +51,16 @@ jobs:
             echo "Non-manual run — using placeholder target Docling version: $TARGET"
           fi
           echo "Branch detected: $BRANCH_NAME"
-          pwsh -NoProfile -NonInteractive -Command "& './scripts/upgrade_validation_check.ps1' -CreateBranchName \"$BRANCH_NAME\" -TargetDoclingVersion \"$TARGET\"" 2>&1 | tee upgrade_validation_output.txt
+          # Ensure the script exists and normalize line endings for cross-platform runners
+          if [ ! -f "$GITHUB_WORKSPACE/scripts/upgrade_validation_check.ps1" ]; then
+            echo "ERROR: script not found at $GITHUB_WORKSPACE/scripts/upgrade_validation_check.ps1" >&2
+            exit 1
+          fi
+          # Convert CRLF to LF if needed (dos2unix is available on ubuntu runners)
+          if command -v dos2unix >/dev/null 2>&1; then
+            dos2unix "$GITHUB_WORKSPACE/scripts/upgrade_validation_check.ps1" || true
+          fi
+          pwsh -NoProfile -NonInteractive -File "$GITHUB_WORKSPACE/scripts/upgrade_validation_check.ps1" -CreateBranchName "$BRANCH_NAME" -TargetDoclingVersion "$TARGET" 2>&1 | tee upgrade_validation_output.txt
 
       - name: Upload validation output
         uses: actions/upload-artifact@v4
