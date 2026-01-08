@@ -51,7 +51,7 @@ jobs:
             echo "Non-manual run — using placeholder target Docling version: $TARGET"
           fi
           echo "Branch detected: $BRANCH_NAME"
-          pwsh -NoProfile -NonInteractive -File ./scripts/upgrade_validation_check.ps1 -CreateBranchName "$BRANCH_NAME" -TargetDoclingVersion "$TARGET" 2>&1 | tee upgrade_validation_output.txt
+          pwsh -NoProfile -NonInteractive -Command "& './scripts/upgrade_validation_check.ps1' -CreateBranchName \"$BRANCH_NAME\" -TargetDoclingVersion \"$TARGET\"" 2>&1 | tee upgrade_validation_output.txt
 
       - name: Upload validation output
         uses: actions/upload-artifact@v4
