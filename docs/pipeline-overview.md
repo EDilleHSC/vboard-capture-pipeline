@@ -1,125 +1,83 @@
-# Pipeline Overview — VBoard Capture
+# Pipeline Overview
 
-This document describes the **authoritative ingestion and capture flow** for VBoarder.
-
----
-
-## 1️⃣ Input Sources (Untrusted)
-
-Inputs entering the system are assumed to be:
-- Unstructured
-- Messy
-- Inconsistent
-- Potentially incomplete
-
-Examples:
-- PDFs (native or scanned)
-- Office documents
-- Image files
-- Email attachments
-- Mailroom drops
-
-No assumptions are made about correctness at this stage.
+This document explains how the VBoard Capture Pipeline fits into the larger VBoarder ecosystem.
 
 ---
 
-## 2️⃣ Capture Layer (Normalization)
+## Why This Exists
 
-The Capture Layer is responsible for:
+AI systems fail most often at the **edges**, not in the models.
 
-- File type detection
-- Text extraction
-- Layout preservation
-- Structural reconstruction
-- Metadata capture (pages, bounding boxes, provenance)
-
-**Key rule:**  
-> Capture does not interpret meaning — it preserves structure.
+This pipeline protects the system by enforcing:
+- controlled ingestion
+- reproducible snapshots
+- upgrade verification
+- human-review checkpoints
 
 ---
 
-## 3️⃣ Structure & Validation
+## Core Stages
 
-Captured content is transformed into:
+### 1. Capture (Mailroom)
+- Files arrive via watched inbox, API, or sync
+- No interpretation occurs here
+- Files are treated as untrusted input
 
-- Hierarchical document models
-- Typed elements (sections, tables, figures, captions)
-- Explicit metadata
-- Deterministic identifiers
+### 2. Snapshot
+- Directory contents are snapshotted into JSON
+- Filenames, sizes, timestamps recorded
+- Snapshots are immutable once written
 
-Validation ensures:
-- Required fields exist
-- Types are correct
-- Output matches declared schema
+### 3. Validation
+- Parsers / extractors are tested against snapshots
+- CI verifies:
+  - file integrity
+  - parser compatibility
+  - regression safety
+- Results are written as artifacts
 
-Failures stop the pipeline.
-
----
-
-## 4️⃣ Chunking & Context Preservation
-
-Validated documents are chunked by:
-- Sections
-- Tables
-- Figures
-- Semantic boundaries (not fixed token size)
-
-Each chunk retains:
-- Parent context
-- Source reference
-- Provenance metadata
-
-This enables:
-- High-quality RAG
-- Explainable answers
-- Source linking
+### 4. Routing
+- Only validated content proceeds
+- Routing targets may include:
+  - agent inboxes
+  - RAG stores
+  - archives
+  - quarantine
 
 ---
 
-## 5️⃣ Downstream Consumers
+## What This Pipeline Does NOT Do
 
-Structured outputs are consumed by:
-
-- RAG pipelines
-- AI agents
-- Human review tools
-- Audit / compliance systems
-
-The Capture Pipeline **does not** execute agents.
+- ❌ No UI rendering
+- ❌ No embeddings
+- ❌ No agent reasoning
+- ❌ No chat logic
+- ❌ No model inference (unless explicitly validated)
 
 ---
 
-## 6️⃣ Tooling Strategy (Docling)
+## Upgrade Strategy
 
-Docling is used as a **pluggable capture engine**, providing:
-- Multi-format parsing
-- Structured document models
-- Provenance metadata
-- Schema-driven extraction
+All upgrades follow this pattern:
 
-Docling versions are pinned and validated before use.
-
----
-
-## 7️⃣ Safety & Governance
-
-- No silent upgrades
-- No direct installs on `main`
-- CI validation required
-- Full traceability from input → output
+1. Branch created (`upgrade/<tool>-<date>`)
+2. CI validates against known snapshots
+3. Artifact reviewed
+4. Merge only after approval
 
 ---
 
-## 📌 Key Takeaway
+## Trust Boundary
+
+This repo is a **hard trust boundary**.
+
+If something breaks here, it **must fail**.
+Silent success is considered a bug.
+
+---
+
+## Key Takeaway
 
 > **Capture is infrastructure.**
 >
 > If capture is wrong, everything downstream is wrong — faster.
-
-This pipeline exists to make that impossible.
-
-✅ What to do right now
-
-Paste both files
-
-Commit them
