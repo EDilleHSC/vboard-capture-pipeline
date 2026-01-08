@@ -51,10 +51,14 @@ jobs:
             echo "Non-manual run — using placeholder target Docling version: $TARGET"
           fi
           echo "Branch detected: $BRANCH_NAME"
-          # Ensure the script exists and normalize line endings for cross-platform runners
+          # Ensure the script exists; if not, fetch it from main so manual dispatches work when target branches don't include the script
           if [ ! -f "$GITHUB_WORKSPACE/scripts/upgrade_validation_check.ps1" ]; then
-            echo "ERROR: script not found at $GITHUB_WORKSPACE/scripts/upgrade_validation_check.ps1" >&2
-            exit 1
+            echo "Script not found in checkout; attempting to fetch from main..."
+            mkdir -p "$GITHUB_WORKSPACE/scripts"
+            if ! curl -sSfL "https://raw.githubusercontent.com/EDilleHSC/vboard-capture-pipeline/main/scripts/upgrade_validation_check.ps1" -o "$GITHUB_WORKSPACE/scripts/upgrade_validation_check.ps1"; then
+              echo "ERROR: could not download script from main" >&2
+              exit 1
+            fi
           fi
           # Convert CRLF to LF if needed (dos2unix is available on ubuntu runners)
           if command -v dos2unix >/dev/null 2>&1; then
