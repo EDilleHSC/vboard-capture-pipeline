@@ -48,3 +48,39 @@ A simple, deterministic, read-only intake boundary for desktop users. Files are 
 - Add a read-only watcher prototype (separately) that invokes the snapshot script on-demand (no auto-moves)
 - Add CI checks to validate snapshot schema (unit tests)
 - Optionally include OCR verification metadata and hashing in snapshots as opt-in features
+
+## Manual watcher (prototype)
+
+A simple, **manual** watcher prototype is provided as `scripts/watch_inbox_once.ps1`.
+
+Principles (non-negotiable)
+
+- **No background daemon** — this script is **invoked manually only**.
+- **No inotify / no systemd** — no services or units are installed.
+- **No file moves/renames/deletes** — the script only triggers the snapshot and records an event.
+- **Append-only events log** — events are written to `INBOX/_snapshots/events.log` as newline-delimited JSON (NDJSON).
+- **Deterministic** — same inputs → same snapshot; watcher is a thin trigger.
+
+Usage
+
+From the repo root (or local copy):
+
+```bash
+pwsh ./scripts/watch_inbox_once.ps1 -InboxPath "$HOME/Desktop/INBOX"
+# optional: include hashes
+pwsh ./scripts/watch_inbox_once.ps1 -InboxPath "$HOME/Desktop/INBOX" -IncludeHashes
+```
+
+Events log format
+
+Events are appended as compressed JSON on a single line (NDJSON). Example entry:
+
+```json
+{"timestamp":"2026-01-27T20:15:30Z","action":"snapshot","snapshot":"snapshot-20260127T201530Z.json","snapshot_path":"/home/alice/Desktop/INBOX/_snapshots/snapshot-20260127T201530Z.json","file_count":3,"command":"pwsh -NoProfile -NonInteractive ./scripts/capture_inbox_snapshot.ps1 -InboxPath /home/alice/Desktop/INBOX"}
+```
+
+Notes
+
+- The watcher **does not** validate or interpret file contents — it only records that a snapshot was taken.
+- The snapshot script remains the single source of truth for snapshot shape and content.
+- This prototype is intentionally conservative: manual, local, and read-only.
