@@ -16,7 +16,7 @@ Exit codes:
 #>
 
 Param(
-    [string]$InboxPath = "$HOME/Desktop/INBOX",
+    [string]$InboxPath = "$HOME/CAPTURE_HOLE",
     [switch]$IncludeHashes
 )
 
@@ -30,8 +30,11 @@ try {
 }
 
 $inbox = $inboxResolved.ProviderPath
+# Ensure snapshots and events dirs exist
 $snapDir = Join-Path $inbox '_snapshots'
+$eventsDir = Join-Path $inbox '_events'
 if (-not (Test-Path $snapDir)) { New-Item -ItemType Directory -Path $snapDir | Out-Null }
+if (-not (Test-Path $eventsDir)) { New-Item -ItemType Directory -Path $eventsDir | Out-Null }
 
 # Run the core snapshot script exactly as-is (opt-in IncludeHashes passthrough)
 $script = Join-Path (Split-Path -Parent $MyInvocation.MyCommand.Path) 'capture_inbox_snapshot.ps1'
