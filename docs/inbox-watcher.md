@@ -2,7 +2,7 @@
 
 ## Goal
 
-A simple, deterministic, read-only intake boundary for desktop users. Files are dropped into `~/Desktop/INBOX`. Operators take a snapshot (immutable JSON) that records the state of the inbox at a moment in time.
+A simple, deterministic, read-only intake boundary for desktop users. Files are dropped into `~/CAPTURE_HOLE` (recommended canonical path). Operators drop items into the intake hole and explicitly trigger a snapshot (immutable JSON) that records the state of the hole at a moment in time. A desktop symlink (`~/Desktop/CAPTURE_HOLE`) may be used for convenience.
 
 ## Design principles
 
@@ -14,7 +14,7 @@ A simple, deterministic, read-only intake boundary for desktop users. Files are 
 ## Snapshot script
 
 - Path: `scripts/capture_inbox_snapshot.ps1`
-- Invocation: `pwsh ./scripts/capture_inbox_snapshot.ps1 -InboxPath "$HOME/Desktop/INBOX" [-IncludeHashes]`
+- Invocation: `pwsh ./scripts/capture_inbox_snapshot.ps1 -InboxPath "$HOME/CAPTURE_HOLE" [-IncludeHashes]` (recommended)
 - Behavior:
   - Validates `InboxPath` exists
   - Writes snapshot to `INBOX/_snapshots/snapshot-<YYYYMMDDTHHMMSSZ>.json`
@@ -58,7 +58,7 @@ Principles (non-negotiable)
 - **No background daemon** — this script is **invoked manually only**.
 - **No inotify / no systemd** — no services or units are installed.
 - **No file moves/renames/deletes** — the script only triggers the snapshot and records an event.
-- **Append-only events log** — events are written to `INBOX/_snapshots/events.log` as newline-delimited JSON (NDJSON).
+- **Append-only events log** — events are written to `CAPTURE_HOLE/_events/events.log` as newline-delimited JSON (NDJSON).
 - **Deterministic** — same inputs → same snapshot; watcher is a thin trigger.
 
 Usage
@@ -76,7 +76,14 @@ Events log format
 Events are appended as compressed JSON on a single line (NDJSON). Example entry:
 
 ```json
-{"timestamp":"2026-01-27T20:15:30Z","action":"snapshot","snapshot":"snapshot-20260127T201530Z.json","snapshot_path":"/home/alice/Desktop/INBOX/_snapshots/snapshot-20260127T201530Z.json","file_count":3,"command":"pwsh -NoProfile -NonInteractive ./scripts/capture_inbox_snapshot.ps1 -InboxPath /home/alice/Desktop/INBOX"}
+{
+  "timestamp": "2026-01-27T20:15:30Z",
+  "action": "snapshot",
+  "snapshot": "snapshot-20260127T201530Z.json",
+  "snapshot_path": "/home/alice/Desktop/INBOX/_snapshots/snapshot-20260127T201530Z.json",
+  "file_count": 3,
+  "command": "pwsh -NoProfile -NonInteractive ./scripts/capture_inbox_snapshot.ps1 -InboxPath /home/alice/Desktop/INBOX"
+}
 ```
 
 Notes
