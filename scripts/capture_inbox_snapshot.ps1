@@ -37,10 +37,11 @@ $files = Get-ChildItem -Path $inbox -File -Force | Where-Object { $_.Name -ne '_
 $entries = @()
 foreach ($f in $files) {
     $entry = [PSCustomObject]@{
-        filename = $f.Name
+        name = $f.Name
         relative_path = $f.Name
-        size = $f.Length
+        size_bytes = $f.Length
         mtime = $f.LastWriteTimeUtc.ToString('o')
+        ctime = $f.CreationTimeUtc.ToString('o')
     }
     if ($IncludeHashes) {
         try {
@@ -49,13 +50,20 @@ foreach ($f in $files) {
         } catch {
             $entry | Add-Member -NotePropertyName sha256 -NotePropertyValue $null
         }
+    } else {
+        # keep sha256 property present for deterministic schema
+        $entry | Add-Member -NotePropertyName sha256 -NotePropertyValue $null
     }
     $entries += $entry
 }
 
+# Sort entries deterministically by relative_path
+$entries = $entries | Sort-Object relative_path
+
 $snapshot = [PSCustomObject]@{
-    snapshot_time = (Get-Date).ToString('o')
-    inbox = $inbox
+    snapshot_version = 1
+    captured_at = (Get-Date).ToString('o')
+    watch_path = $inbox
     file_count = $entries.Count
     files = $entries
 }
