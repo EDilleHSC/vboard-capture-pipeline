@@ -1,0 +1,39 @@
+name: Linux pwsh validation
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  validate-pwsh:
+    name: Validate pwsh + upgrade checks
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install snapd and PowerShell
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y snapd
+          sudo snap install powershell --classic
+
+      - name: Verify pwsh
+        run: pwsh --version
+
+      - name: Run upgrade validation (pwsh)
+        run: pwsh -NoProfile -NonInteractive ./scripts/upgrade_validation_check.ps1
+        # Intentionally run from bash so the return code propagates explicitly
+
+      - name: Upload logs on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: upgrade-validation-logs
+          path: |
+            ./upgrade_validation_check_log.txt
+
+    # Keep job strict - any failing step should fail the job
