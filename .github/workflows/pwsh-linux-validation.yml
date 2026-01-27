@@ -28,6 +28,9 @@ jobs:
         run: pwsh -NoProfile -NonInteractive ./scripts/upgrade_validation_check.ps1
         # Intentionally run from bash so the return code propagates explicitly
 
+      - name: Run snapshot schema test
+        run: pwsh -NoProfile -NonInteractive ./tests/snapshot_schema.test.ps1
+
       - name: Upload logs on failure
         if: failure()
         uses: actions/upload-artifact@v4
