@@ -12,7 +12,12 @@ from pathlib import Path
 import re
 import json
 
+# Global list to track results
+results = []
+
 def report(name: str, status: str, note: str = ""):
+    global results
+    results.append({"name": name, "status": status})
     color = {"PASS": "\033[92m", "FAIL": "\033[91m", "SKIPPED": "\033[93m"}
     print(f"{name:<50} {color.get(status, '')}{status}\033[0m")
     if note:
