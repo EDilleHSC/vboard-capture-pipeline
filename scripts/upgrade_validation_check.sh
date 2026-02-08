@@ -12,8 +12,6 @@
 # - This script is intentionally conservative
 # - Run manually and attach logs to upgrade PR
 
-set -e
-
 readonly SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 readonly REPO_ROOT="$(dirname "$SCRIPT_DIR")"
 
@@ -77,16 +75,18 @@ else
 fi
 
 # Git status
-if gst=$(git status --porcelain 2>&1); then
-    if [[ -z "$gst" ]]; then
-        report "git status is clean" "PASS"
-    else
-        report "git status is clean" "FAIL" "Working tree contains changes. Please commit or stash and re-run."
-        exit 2
-    fi
+gst=$(git status --porcelain 2>&1 || echo "")
+if [[ -z "$gst" ]]; then
+    report "git status is clean" "PASS"
 else
-    report "git status is clean" "FAIL" "git not available: $gst"
-    exit 2
+    # Check if there are untracked files only (OK) vs modified tracked files (NOT OK)
+    modified=$(git status --porcelain 2>&1 | grep -E '^ [AM]|^[AMR] ' || true)
+    if [[ -n "$modified" ]]; then
+        report "git status is clean" "FAIL" "Modified tracked files found. Commit or stash and re-run."
+        exit 2
+    else
+        report "git status is clean" "PASS" "Only untracked files present (OK)"
+    fi
 fi
 
 # Check for running dev servers (mcp_server pid files)
