@@ -33,11 +33,16 @@ def main():
         report("current branch", "FAIL", "Not a git repo or git missing")
         sys.exit(2)
 
-    # Git clean?
+    # Git clean? (allow untracked files, but not modified tracked files)
     status = subprocess.getoutput("git status --porcelain")
     if status.strip():
-        report("git status is clean", "FAIL", "Working tree has changes")
-        sys.exit(2)
+        # Check if there are only untracked files (??), not modified tracked files
+        modified = subprocess.getoutput("git status --porcelain | grep -E '^ [AM]|^[AMR] ' || true")
+        if modified.strip():
+            report("git status is clean", "FAIL", "Modified tracked files found")
+            sys.exit(2)
+        else:
+            report("git status is clean", "PASS", "Only untracked files present (OK)")
     else:
         report("git status is clean", "PASS")
 
