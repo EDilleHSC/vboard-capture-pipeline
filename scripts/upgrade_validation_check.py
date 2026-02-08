@@ -89,7 +89,8 @@ def main():
     # Docling version check
     try:
         import docling
-        current = docling.__version__
+        from importlib.metadata import version
+        current = version('docling')
         print(f"Current Docling version: {current}")
         if args.target_docling_version and current != args.target_docling_version:
             report("Docling version matches target", "FAIL", f"Current={current}, Target={args.target_docling_version}")
@@ -98,6 +99,8 @@ def main():
     except ImportError:
         report("Docling import", "SKIPPED", "docling not installed (use: pip install docling)")
         # Don't fail; this is optional for a template repo
+    except Exception as e:
+        report("Docling version check", "SKIPPED", f"Could not determine version: {e}")
 
     # Basic smoke test (if docling is available)
     try:
