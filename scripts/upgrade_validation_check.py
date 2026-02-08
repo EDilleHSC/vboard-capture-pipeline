@@ -127,9 +127,15 @@ def main():
         report("pytest", "SKIPPED", "pytest not installed")
 
     print("\n" + "="*70)
-    print("All checks PASS or SKIPPED. Good to proceed with Docling upgrade.")
-    print("="*70)
-    sys.exit(0)
+    failures = [r for r in results if r["status"] == "FAIL"]
+    if failures:
+        print(f"❌ {len(failures)} check(s) FAILED. Please resolve before proceeding.")
+        print("="*70)
+        sys.exit(2)
+    else:
+        print("✓ All checks PASS or SKIPPED. Good to proceed with Docling upgrade.")
+        print("="*70)
+        sys.exit(0)
 
 if __name__ == "__main__":
     main()
